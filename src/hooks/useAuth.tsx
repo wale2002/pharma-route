@@ -1,11 +1,30 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User } from '@/lib/mockApi';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import {
+  login,
+  register as apiRegister,
+  logout as apiLogout,
+  User,
+} from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: Omit<User, 'id' | 'createdAt'>) => Promise<void>;
-  logout: () => void;
+  register: (userData: {
+    email: string;
+    password: string;
+    role: "clinic" | "pharmacy" | "rider";
+    name: string;
+    organization?: string;
+    address?: string;
+    phone?: string;
+  }) => Promise<void>;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -16,39 +35,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const currentUser = authApi.getCurrentUser();
-    setUser(currentUser);
+    // Check for existing session from localStorage (user data persisted after login)
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse stored user:", error);
+        localStorage.removeItem("user");
+      }
+    }
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const loginHandler = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { user } = await authApi.login(email, password);
+      const { user } = await login({ email, password });
       setUser(user);
+      localStorage.setItem("user", JSON.stringify(user));
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (userData: Omit<User, 'id' | 'createdAt'>) => {
+  const registerHandler = async (userData: {
+    email: string;
+    password: string;
+    role: "clinic" | "pharmacy" | "rider";
+    name: string;
+    organization?: string;
+    address?: string;
+    phone?: string;
+  }) => {
     setLoading(true);
     try {
-      const { user } = await authApi.register(userData);
+      const { user } = await apiRegister(userData);
       setUser(user);
+      localStorage.setItem("user", JSON.stringify(user));
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    authApi.logout();
-    setUser(null);
+  const logoutHandler = async () => {
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("user");
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login: loginHandler,
+        register: registerHandler,
+        logout: logoutHandler,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -57,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
