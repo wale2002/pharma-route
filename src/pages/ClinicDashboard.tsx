@@ -1,4 +1,4 @@
-// import { useState, useEffect } from "react";
+// import React, { useState, useEffect } from "react";
 // import { Button } from "@/components/ui/button";
 // import {
 //   Card,
@@ -106,6 +106,7 @@
 //   useEffect(() => {
 //     loadData();
 //   }, [
+//     user, // Added user to deps to reload on login/logout
 //     requestsPage,
 //     requestsSearch,
 //     requestsFilter,
@@ -118,6 +119,23 @@
 //   ]);
 
 //   const loadData = async () => {
+//     if (!user) {
+//       // No user logged in, skip API calls to avoid 401 errors
+//       setRequestsData({
+//         data: [],
+//         pagination: { current: 1, pages: 0, total: 0 },
+//       });
+//       setHistoryData({
+//         data: [],
+//         pagination: { current: 1, pages: 0, total: 0 },
+//       });
+//       setProductsData({
+//         data: [],
+//         pagination: { current: 1, pages: 0, total: 0 },
+//       });
+//       return;
+//     }
+
 //     try {
 //       const requestsFilterParam =
 //         requestsFilter === "all" ? "" : requestsFilter;
@@ -174,19 +192,23 @@
 //         });
 //       }
 //     } catch (error) {
-//       // If error is auth-related for non-pharmacy, ignore and set empty products
-//       if (error instanceof Error && error.message.includes("not authorized")) {
-//         setProductsData({
-//           data: [],
-//           pagination: { current: 1, pages: 0, total: 0 },
-//         });
-//       } else {
+//       // Handle auth errors (e.g., expired token) by logging out and toasting
+//       if (error instanceof Error && error.message.includes("Not authorized")) {
 //         toast({
-//           title: "Error loading data",
-//           description: "Could not fetch requests or inventory.",
+//           title: "Session Expired",
+//           description: "Please log in again to continue.",
 //           variant: "destructive",
 //         });
+//         // Assuming useAuth has a logout method; if not, call api.logout() and update context
+//         // useAuth.logout(); // Uncomment if available
+//         return;
 //       }
+//       // For non-auth errors (e.g., network), show toast
+//       toast({
+//         title: "Error loading data",
+//         description: "Could not fetch requests or inventory.",
+//         variant: "destructive",
+//       });
 //       console.error("Error loading data:", error);
 //     }
 //   };
@@ -376,27 +398,29 @@
 
 //   return (
 //     <div className="space-y-6">
-//       <div className="flex items-center justify-between">
+//       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
 //         <div>
-//           <h1 className="text-3xl font-bold text-foreground">
+//           <h1 className="text-2xl md:text-3xl font-bold text-foreground">
 //             Healthcare Dashboard
 //           </h1>
-//           <p className="text-muted-foreground">
+//           <p className="text-sm md:text-base text-muted-foreground">
 //             Manage your drug requests and deliveries
 //           </p>
 //         </div>
 
 //         <Dialog open={isNewRequestOpen} onOpenChange={setIsNewRequestOpen}>
 //           <DialogTrigger asChild>
-//             <Button className="bg-gradient-primary hover:opacity-90">
-//               <Plus className="h-4 w-4 mr-2" />
+//             <Button className="bg-gradient-primary hover:opacity-90 text-sm md:text-base">
+//               <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
 //               New Request
 //             </Button>
 //           </DialogTrigger>
-//           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+//           <DialogContent className="max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <DialogHeader>
-//               <DialogTitle>Create New Drug Request</DialogTitle>
-//               <DialogDescription>
+//               <DialogTitle className="text-lg md:text-xl">
+//                 Create New Drug Request
+//               </DialogTitle>
+//               <DialogDescription className="text-sm md:text-base">
 //                 Submit a request by uploading a photo or selecting from
 //                 available inventory.
 //               </DialogDescription>
@@ -409,23 +433,26 @@
 //               }
 //             >
 //               <TabsList className="grid w-full grid-cols-2">
-//                 <TabsTrigger value="photo" className="flex items-center gap-2">
-//                   <Camera className="h-4 w-4" />
-//                   Photo Request
+//                 <TabsTrigger
+//                   value="photo"
+//                   className="flex items-center gap-1 md:gap-2 text-xs md:text-sm"
+//                 >
+//                   <Camera className="h-3 w-3 md:h-4 md:w-4" />
+//                   Photo
 //                 </TabsTrigger>
 //                 <TabsTrigger
 //                   value="inventory"
-//                   className="flex items-center gap-2"
+//                   className="flex items-center gap-1 md:gap-2 text-xs md:text-sm"
 //                   disabled={!isPharmacy} // Disable for non-pharmacies
 //                 >
-//                   <Package className="h-4 w-4" />
-//                   From Inventory
+//                   <Package className="h-3 w-3 md:h-4 md:w-4" />
+//                   Inventory
 //                 </TabsTrigger>
 //               </TabsList>
 
 //               <TabsContent value="photo" className="space-y-4">
 //                 <div className="space-y-2">
-//                   <Label htmlFor="photo">
+//                   <Label htmlFor="photo" className="text-sm md:text-base">
 //                     Upload Drug Photos (Multiple Allowed)
 //                   </Label>
 //                   <Input
@@ -434,10 +461,10 @@
 //                     accept="image/*"
 //                     multiple
 //                     onChange={handlePhotoUpload}
-//                     className="cursor-pointer"
+//                     className="cursor-pointer text-sm"
 //                   />
 //                   {photoFiles.length > 0 && (
-//                     <p className="text-sm text-muted-foreground">
+//                     <p className="text-xs md:text-sm text-muted-foreground">
 //                       Selected {photoFiles.length} file(s):{" "}
 //                       {photoFiles.map((f) => f.name).join(", ")}
 //                     </p>
@@ -449,7 +476,7 @@
 //                 {isPharmacy ? (
 //                   <div className="space-y-3 max-h-60 overflow-y-auto">
 //                     {products.length === 0 ? (
-//                       <p className="text-sm text-muted-foreground text-center py-4">
+//                       <p className="text-xs md:text-sm text-muted-foreground text-center py-4">
 //                         No inventory available at this time.
 //                       </p>
 //                     ) : (
@@ -460,21 +487,24 @@
 //                         return (
 //                           <div
 //                             key={product._id}
-//                             className="flex items-center justify-between p-3 border rounded-lg"
+//                             className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 md:p-3 border rounded-lg gap-2 md:gap-0"
 //                           >
-//                             <div>
-//                               <p className="font-medium">{product.name}</p>
-//                               <p className="text-sm text-muted-foreground">
+//                             <div className="text-left">
+//                               <p className="font-medium text-sm md:text-base">
+//                                 {product.name}
+//                               </p>
+//                               <p className="text-xs md:text-sm text-muted-foreground">
 //                                 {product.description}
 //                               </p>
-//                               <p className="text-sm font-medium text-primary">
+//                               <p className="text-xs md:text-sm font-medium text-primary">
 //                                 ${product.price}
 //                               </p>
 //                             </div>
-//                             <div className="flex items-center gap-2">
+//                             <div className="flex items-center gap-1 md:gap-2 self-end md:self-auto">
 //                               <Button
 //                                 variant="outline"
 //                                 size="sm"
+//                                 className="text-xs md:text-sm h-8 w-8 md:h-auto md:w-auto px-2 md:px-3"
 //                                 onClick={() =>
 //                                   updateProductQuantity(
 //                                     product._id,
@@ -485,12 +515,13 @@
 //                               >
 //                                 -
 //                               </Button>
-//                               <span className="w-8 text-center">
+//                               <span className="w-6 md:w-8 text-center text-sm md:text-base">
 //                                 {selected?.quantity || 0}
 //                               </span>
 //                               <Button
 //                                 variant="outline"
 //                                 size="sm"
+//                                 className="text-xs md:text-sm h-8 w-8 md:h-auto md:w-auto px-2 md:px-3"
 //                                 onClick={() =>
 //                                   updateProductQuantity(
 //                                     product._id,
@@ -510,10 +541,14 @@
 //                     )}
 //                   </div>
 //                 ) : (
-//                   <div className="text-center py-8 text-muted-foreground">
-//                     <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                     <p>Inventory selection is available for pharmacies only.</p>
-//                     <p className="text-sm">Use photo requests for clinics.</p>
+//                   <div className="text-center py-4 md:py-8 text-muted-foreground">
+//                     <Package className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-50" />
+//                     <p className="text-sm md:text-base">
+//                       Inventory selection is available for pharmacies only.
+//                     </p>
+//                     <p className="text-xs md:text-sm">
+//                       Use photo requests for clinics.
+//                     </p>
 //                   </div>
 //                 )}
 //               </TabsContent>
@@ -521,22 +556,28 @@
 
 //             <div className="space-y-4">
 //               <div className="space-y-2">
-//                 <Label htmlFor="address">Delivery Address</Label>
+//                 <Label htmlFor="address" className="text-sm md:text-base">
+//                   Delivery Address
+//                 </Label>
 //                 <Input
 //                   id="address"
 //                   value={deliveryAddress}
 //                   onChange={(e) => setDeliveryAddress(e.target.value)}
 //                   placeholder="Enter full delivery address"
+//                   className="text-sm md:text-base"
 //                 />
 //               </div>
 
 //               <div className="space-y-2">
-//                 <Label htmlFor="patient">Patient Information (Optional)</Label>
+//                 <Label htmlFor="patient" className="text-sm md:text-base">
+//                   Patient Information (Optional)
+//                 </Label>
 //                 <Textarea
 //                   id="patient"
 //                   value={patientInfo}
 //                   onChange={(e) => setPatientInfo(e.target.value)}
 //                   placeholder="Patient details, special instructions, etc."
+//                   className="text-sm md:text-base"
 //                 />
 //               </div>
 
@@ -549,7 +590,7 @@
 //                 disabled={
 //                   loading || (!isPharmacy && requestType === "inventory")
 //                 }
-//                 className="w-full"
+//                 className="w-full text-sm md:text-base"
 //               >
 //                 {loading ? "Submitting..." : "Submit Request"}
 //               </Button>
@@ -560,31 +601,31 @@
 
 //       {/* My Requests */}
 //       <Card>
-//         <CardHeader className="flex flex-row items-center justify-between">
+//         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 pb-4 md:pb-6">
 //           <div>
-//             <CardTitle className="flex items-center gap-2">
-//               <Package className="h-5 w-5" />
+//             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+//               <Package className="h-4 w-4 md:h-5 md:w-5" />
 //               My Requests
 //             </CardTitle>
-//             <CardDescription>
+//             <CardDescription className="text-sm md:text-base">
 //               Track all your drug requests including pending ones
 //             </CardDescription>
 //           </div>
-//           <div className="flex items-center gap-2">
-//             <div className="relative">
-//               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
+//             <div className="relative flex-1 md:flex-none">
+//               <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
 //               <Input
-//                 placeholder="Search requests..."
-//                 className="pl-10 w-48"
+//                 placeholder="Search..."
+//                 className="pl-7 md:pl-10 w-full md:w-36 lg:w-48 text-xs md:text-sm h-8 md:h-auto"
 //                 value={requestsSearch}
 //                 onChange={(e) => handleRequestsSearch(e.target.value)}
 //               />
 //             </div>
 //             <Select value={requestsFilter} onValueChange={setRequestsFilter}>
-//               <SelectTrigger className="w-[180px]">
+//               <SelectTrigger className="w-full md:w-36 lg:w-[180px] text-xs md:text-sm h-8 md:h-auto">
 //                 <SelectValue placeholder="Filter status" />
 //               </SelectTrigger>
-//               <SelectContent>
+//               <SelectContent className="text-xs md:text-sm">
 //                 <SelectItem value="all">All Statuses</SelectItem>
 //                 <SelectItem value="pending">Pending</SelectItem>
 //                 <SelectItem value="confirmed">Confirmed</SelectItem>
@@ -593,25 +634,31 @@
 //             </Select>
 //             <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
 //               <DialogTrigger asChild>
-//                 <Button variant="outline" size="sm">
-//                   <Clock className="h-4 w-4 mr-2" />
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   className="text-xs md:text-sm h-8 md:h-auto"
+//                 >
+//                   <Clock className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
 //                   History ({historyData.pagination.total})
 //                 </Button>
 //               </DialogTrigger>
-//               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+//               <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-y-auto">
 //                 <DialogHeader>
-//                   <DialogTitle>Request History</DialogTitle>
-//                   <DialogDescription>
+//                   <DialogTitle className="text-lg md:text-xl">
+//                     Request History
+//                   </DialogTitle>
+//                   <DialogDescription className="text-sm md:text-base">
 //                     View your past and completed requests (excluding pending)
 //                   </DialogDescription>
 //                 </DialogHeader>
-//                 <div className="flex items-center justify-between mb-4">
-//                   <div className="flex items-center gap-2">
-//                     <div className="relative">
-//                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-4 gap-2 md:gap-0">
+//                   <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
+//                     <div className="relative flex-1 md:flex-none">
+//                       <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
 //                       <Input
-//                         placeholder="Search history..."
-//                         className="pl-10 w-48"
+//                         placeholder="Search..."
+//                         className="pl-7 md:pl-10 w-full md:w-36 lg:w-48 text-xs md:text-sm h-8 md:h-auto"
 //                         value={historySearch}
 //                         onChange={(e) => handleHistorySearch(e.target.value)}
 //                       />
@@ -620,10 +667,10 @@
 //                       value={historyFilter}
 //                       onValueChange={setHistoryFilter}
 //                     >
-//                       <SelectTrigger className="w-[180px]">
+//                       <SelectTrigger className="w-full md:w-36 lg:w-[180px] text-xs md:text-sm h-8 md:h-auto">
 //                         <SelectValue placeholder="Filter" />
 //                       </SelectTrigger>
-//                       <SelectContent>
+//                       <SelectContent className="text-xs md:text-sm">
 //                         <SelectItem value="all">All</SelectItem>
 //                         <SelectItem value="photo">Photo Requests</SelectItem>
 //                         <SelectItem value="inventory">
@@ -637,9 +684,9 @@
 //                 </div>
 //                 <div className="space-y-4">
 //                   {history.length === 0 ? (
-//                     <div className="text-center py-8">
-//                       <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-//                       <p className="text-muted-foreground">
+//                     <div className="text-center py-4 md:py-8">
+//                       <Clock className="h-8 w-8 md:h-12 md:w-12 text-muted-foreground mx-auto mb-2 md:mb-4" />
+//                       <p className="text-sm md:text-base text-muted-foreground">
 //                         No completed requests yet.
 //                       </p>
 //                     </div>
@@ -648,27 +695,32 @@
 //                       {history.map((request) => (
 //                         <div
 //                           key={request._id}
-//                           className="border rounded-lg p-4 space-y-3"
+//                           className="border rounded-lg p-3 md:p-4 space-y-2 md:space-y-3"
 //                         >
-//                           <div className="flex items-center justify-between">
-//                             <div className="flex items-center gap-3">
+//                           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
+//                             <div className="flex items-center gap-2 md:gap-3">
 //                               <Badge
 //                                 variant="outline"
-//                                 className={getStatusColor(request.status)}
+//                                 className={`${getStatusColor(
+//                                   request.status
+//                                 )} text-xs md:text-sm`}
 //                               >
 //                                 {getStatusIcon(request.status)}
 //                                 {request.status
 //                                   .replace(/_/g, " ")
 //                                   .toUpperCase()}
 //                               </Badge>
-//                               <span className="text-sm text-muted-foreground">
+//                               <span className="text-xs md:text-sm text-muted-foreground">
 //                                 Updated:{" "}
 //                                 {new Date(
 //                                   request.updatedAt
 //                                 ).toLocaleDateString()}
 //                               </span>
 //                             </div>
-//                             <Badge variant="secondary">
+//                             <Badge
+//                               variant="secondary"
+//                               className="text-xs md:text-sm"
+//                             >
 //                               {request.type === "photo"
 //                                 ? "Photo Request"
 //                                 : "Inventory Request"}
@@ -679,10 +731,10 @@
 //                             request.photoUrls &&
 //                             request.photoUrls.length > 0 && (
 //                               <div className="space-y-2">
-//                                 <p className="text-sm font-medium">
+//                                 <p className="text-xs md:text-sm font-medium">
 //                                   Uploaded Photos:
 //                                 </p>
-//                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+//                                 <div className="grid grid-cols-2 gap-2">
 //                                   {request.photoUrls.map((photoUrl, index) => (
 //                                     <div key={index} className="relative group">
 //                                       <img
@@ -690,7 +742,7 @@
 //                                         alt={`Submitted drug photo ${
 //                                           index + 1
 //                                         }`}
-//                                         className="max-w-full h-32 object-cover rounded-lg shadow-md"
+//                                         className="w-full h-24 md:h-32 object-cover rounded-lg shadow-md"
 //                                       />
 //                                     </div>
 //                                   ))}
@@ -701,15 +753,15 @@
 //                           {request.type === "inventory" &&
 //                             request.selectedProducts && (
 //                               <div className="space-y-2">
-//                                 <p className="text-sm font-medium">
+//                                 <p className="text-xs md:text-sm font-medium">
 //                                   Requested Items:
 //                                 </p>
-//                                 <div className="grid gap-2">
+//                                 <div className="grid gap-1 md:gap-2">
 //                                   {request.selectedProducts.map(
 //                                     (item, index) => (
 //                                       <div
 //                                         key={index}
-//                                         className="text-sm text-muted-foreground"
+//                                         className="text-xs md:text-sm text-muted-foreground"
 //                                       >
 //                                         • {item.productName} (Qty:{" "}
 //                                         {item.quantity})
@@ -720,29 +772,29 @@
 //                               </div>
 //                             )}
 
-//                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-//                             <MapPin className="h-4 w-4" />
+//                           <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground">
+//                             <MapPin className="h-3 w-3 md:h-4 md:w-4" />
 //                             {request.deliveryAddress}
 //                           </div>
 
 //                           {request.status === "rejected" &&
 //                             request.rejectionReason && (
-//                               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-//                                 <p className="text-sm font-medium text-destructive">
+//                               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 md:p-3">
+//                                 <p className="text-xs md:text-sm font-medium text-destructive">
 //                                   Rejection Reason:
 //                                 </p>
-//                                 <p className="text-sm text-destructive/80">
+//                                 <p className="text-xs md:text-sm text-destructive/80">
 //                                   {request.rejectionReason}
 //                                 </p>
 //                               </div>
 //                             )}
 
 //                           {request.status === "confirmed" && request.order && (
-//                             <div className="bg-success/10 border border-success/20 rounded-lg p-3">
-//                               <p className="text-sm font-medium text-success">
+//                             <div className="bg-success/10 border border-success/20 rounded-lg p-2 md:p-3">
+//                               <p className="text-xs md:text-sm font-medium text-success">
 //                                 Order Details:
 //                               </p>
-//                               <div className="text-sm text-success/80 space-y-1">
+//                               <div className="text-xs md:text-sm text-success/80 space-y-1">
 //                                 <div>Order ID: {request.order._id}</div>
 //                                 <div>Total: ${request.order.totalAmount}</div>
 //                                 <div>
@@ -763,8 +815,8 @@
 //                       ))}
 //                       {/* Pagination for History */}
 //                       {historyData.pagination.pages > 1 && (
-//                         <div className="flex items-center justify-between pt-4">
-//                           <div className="text-sm text-muted-foreground">
+//                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between pt-4 gap-2 md:gap-0">
+//                           <div className="text-xs md:text-sm text-muted-foreground">
 //                             Showing {(historyPage - 1) * PAGE_SIZE + 1} to{" "}
 //                             {Math.min(
 //                               historyPage * PAGE_SIZE,
@@ -776,17 +828,19 @@
 //                             <Button
 //                               variant="outline"
 //                               size="sm"
+//                               className="text-xs md:text-sm h-8 md:h-auto"
 //                               onClick={() =>
 //                                 handleHistoryPageChange(historyPage - 1)
 //                               }
 //                               disabled={historyPage === 1}
 //                             >
-//                               <ChevronLeft className="h-4 w-4" />
-//                               Previous
+//                               <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
+//                               Prev
 //                             </Button>
 //                             <Button
 //                               variant="outline"
 //                               size="sm"
+//                               className="text-xs md:text-sm h-8 md:h-auto"
 //                               onClick={() =>
 //                                 handleHistoryPageChange(historyPage + 1)
 //                               }
@@ -795,7 +849,7 @@
 //                               }
 //                             >
 //                               Next
-//                               <ChevronRight className="h-4 w-4" />
+//                               <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
 //                             </Button>
 //                           </div>
 //                         </div>
@@ -809,9 +863,9 @@
 //         </CardHeader>
 //         <CardContent>
 //           {requests.length === 0 ? (
-//             <div className="text-center py-8">
-//               <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-//               <p className="text-muted-foreground">
+//             <div className="text-center py-4 md:py-8">
+//               <Package className="h-8 w-8 md:h-12 md:w-12 text-muted-foreground mx-auto mb-2 md:mb-4" />
+//               <p className="text-sm md:text-base text-muted-foreground">
 //                 No requests yet. Create your first request above!
 //               </p>
 //             </div>
@@ -820,22 +874,24 @@
 //               {requests.map((request) => (
 //                 <div
 //                   key={request._id}
-//                   className="border rounded-lg p-4 space-y-3"
+//                   className="border rounded-lg p-3 md:p-4 space-y-2 md:space-y-3"
 //                 >
-//                   <div className="flex items-center justify-between">
-//                     <div className="flex items-center gap-3">
+//                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
+//                     <div className="flex items-center gap-2 md:gap-3">
 //                       <Badge
 //                         variant="outline"
-//                         className={getStatusColor(request.status)}
+//                         className={`${getStatusColor(
+//                           request.status
+//                         )} text-xs md:text-sm`}
 //                       >
 //                         {getStatusIcon(request.status)}
 //                         {request.status.replace(/_/g, " ").toUpperCase()}
 //                       </Badge>
-//                       <span className="text-sm text-muted-foreground">
+//                       <span className="text-xs md:text-sm text-muted-foreground">
 //                         {new Date(request.createdAt).toLocaleDateString()}
 //                       </span>
 //                     </div>
-//                     <Badge variant="secondary">
+//                     <Badge variant="secondary" className="text-xs md:text-sm">
 //                       {request.type === "photo"
 //                         ? "Photo Request"
 //                         : "Inventory Request"}
@@ -846,14 +902,16 @@
 //                     request.photoUrls &&
 //                     request.photoUrls.length > 0 && (
 //                       <div className="space-y-2">
-//                         <p className="text-sm font-medium">Uploaded Photos:</p>
-//                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+//                         <p className="text-xs md:text-sm font-medium">
+//                           Uploaded Photos:
+//                         </p>
+//                         <div className="grid grid-cols-2 gap-2">
 //                           {request.photoUrls.map((photoUrl, index) => (
 //                             <div key={index} className="relative group">
 //                               <img
 //                                 src={photoUrl}
 //                                 alt={`Submitted drug photo ${index + 1}`}
-//                                 className="max-w-full h-32 object-cover rounded-lg shadow-md"
+//                                 className="w-full h-24 md:h-32 object-cover rounded-lg shadow-md"
 //                               />
 //                             </div>
 //                           ))}
@@ -863,12 +921,14 @@
 
 //                   {request.type === "inventory" && request.selectedProducts && (
 //                     <div className="space-y-2">
-//                       <p className="text-sm font-medium">Requested Items:</p>
-//                       <div className="grid gap-2">
+//                       <p className="text-xs md:text-sm font-medium">
+//                         Requested Items:
+//                       </p>
+//                       <div className="grid gap-1 md:gap-2">
 //                         {request.selectedProducts.map((item, index) => (
 //                           <div
 //                             key={index}
-//                             className="text-sm text-muted-foreground"
+//                             className="text-xs md:text-sm text-muted-foreground"
 //                           >
 //                             • {item.productName} (Qty: {item.quantity})
 //                           </div>
@@ -877,17 +937,17 @@
 //                     </div>
 //                   )}
 
-//                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-//                     <MapPin className="h-4 w-4" />
+//                   <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground">
+//                     <MapPin className="h-3 w-3 md:h-4 md:w-4" />
 //                     {request.deliveryAddress}
 //                   </div>
 
 //                   {request.status === "rejected" && request.rejectionReason && (
-//                     <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-//                       <p className="text-sm font-medium text-destructive">
+//                     <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 md:p-3">
+//                       <p className="text-xs md:text-sm font-medium text-destructive">
 //                         Rejection Reason:
 //                       </p>
-//                       <p className="text-sm text-destructive/80">
+//                       <p className="text-xs md:text-sm text-destructive/80">
 //                         {request.rejectionReason}
 //                       </p>
 //                     </div>
@@ -896,8 +956,8 @@
 //               ))}
 //               {/* Pagination for Requests */}
 //               {requestsData.pagination.pages > 1 && (
-//                 <div className="flex items-center justify-between pt-4">
-//                   <div className="text-sm text-muted-foreground">
+//                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between pt-4 gap-2 md:gap-0">
+//                   <div className="text-xs md:text-sm text-muted-foreground">
 //                     Showing {(requestsPage - 1) * PAGE_SIZE + 1} to{" "}
 //                     {Math.min(
 //                       requestsPage * PAGE_SIZE,
@@ -909,20 +969,22 @@
 //                     <Button
 //                       variant="outline"
 //                       size="sm"
+//                       className="text-xs md:text-sm h-8 md:h-auto"
 //                       onClick={() => handleRequestsPageChange(requestsPage - 1)}
 //                       disabled={requestsPage === 1}
 //                     >
-//                       <ChevronLeft className="h-4 w-4" />
-//                       Previous
+//                       <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
+//                       Prev
 //                     </Button>
 //                     <Button
 //                       variant="outline"
 //                       size="sm"
+//                       className="text-xs md:text-sm h-8 md:h-auto"
 //                       onClick={() => handleRequestsPageChange(requestsPage + 1)}
 //                       disabled={requestsPage === requestsData.pagination.pages}
 //                     >
 //                       Next
-//                       <ChevronRight className="h-4 w-4" />
+//                       <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
 //                     </Button>
 //                   </div>
 //                 </div>
@@ -935,7 +997,7 @@
 //   );
 // }
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -1021,11 +1083,13 @@ export default function ClinicDashboard() {
   // Pagination, search, filter for requests
   const [requestsPage, setRequestsPage] = useState(1);
   const [requestsSearch, setRequestsSearch] = useState("");
+  const [requestsSearchInput, setRequestsSearchInput] = useState("");
   const [requestsFilter, setRequestsFilter] = useState("all");
 
   // Pagination, search, filter for history
   const [historyPage, setHistoryPage] = useState(1);
   const [historySearch, setHistorySearch] = useState("");
+  const [historySearchInput, setHistorySearchInput] = useState("");
   const [historyFilter, setHistoryFilter] = useState("all");
 
   // Pagination, search, filter for products (if needed)
@@ -1040,115 +1104,140 @@ export default function ClinicDashboard() {
 
   const PAGE_SIZE = 3;
 
+  // Debounce for requests search
   useEffect(() => {
-    loadData();
-  }, [
-    user, // Added user to deps to reload on login/logout
-    requestsPage,
-    requestsSearch,
-    requestsFilter,
-    historyPage,
-    historySearch,
-    historyFilter,
-    productsPage,
-    productsSearch,
-    productsFilter,
-  ]);
+    const timer = setTimeout(() => {
+      setRequestsSearch(requestsSearchInput);
+      setRequestsPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [requestsSearchInput]);
 
-  const loadData = async () => {
+  // Debounce for history search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHistorySearch(historySearchInput);
+      setHistoryPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [historySearchInput]);
+
+  // Error handler
+  const handleError = (error: unknown) => {
+    if (error instanceof Error && error.message.includes("Not authorized")) {
+      toast({
+        title: "Session Expired",
+        description: "Please log in again to continue.",
+        variant: "destructive",
+      });
+      // Assuming useAuth has a logout method; if not, call api.logout() and update context
+      // useAuth.logout(); // Uncomment if available
+      return;
+    }
+    // For non-auth errors (e.g., network), show toast
+    toast({
+      title: "Error loading data",
+      description: "Could not fetch requests or inventory.",
+      variant: "destructive",
+    });
+    console.error("Error loading data:", error);
+  };
+
+  // Load requests
+  const loadRequests = async () => {
     if (!user) {
-      // No user logged in, skip API calls to avoid 401 errors
       setRequestsData({
         data: [],
         pagination: { current: 1, pages: 0, total: 0 },
       });
+      return;
+    }
+    try {
+      const filterParam = requestsFilter === "all" ? "" : requestsFilter;
+      const result = await getUserRequests(
+        requestsPage,
+        PAGE_SIZE,
+        requestsSearch,
+        filterParam
+      );
+      setRequestsData(result);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  // Load history
+  const loadHistory = async () => {
+    if (!user) {
       setHistoryData({
         data: [],
         pagination: { current: 1, pages: 0, total: 0 },
       });
+      return;
+    }
+    try {
+      const filterParam = historyFilter === "all" ? "" : historyFilter;
+      const result = await getClinicRequestHistory(
+        historyPage,
+        PAGE_SIZE,
+        historySearch,
+        filterParam
+      );
+      setHistoryData(result);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  // Load inventory
+  const loadInventory = async () => {
+    if (!user || user.role !== "pharmacy") {
       setProductsData({
         data: [],
         pagination: { current: 1, pages: 0, total: 0 },
       });
       return;
     }
-
     try {
-      const requestsFilterParam =
-        requestsFilter === "all" ? "" : requestsFilter;
-      const historyFilterParam = historyFilter === "all" ? "" : historyFilter;
-      const productsFilterParam =
-        productsFilter === "all" ? "" : productsFilter;
-
-      const requestsPromise = getUserRequests(
-        requestsPage,
-        PAGE_SIZE,
-        requestsSearch,
-        requestsFilterParam
+      const filterParam = productsFilter === "all" ? "" : productsFilter;
+      const result = await getInventory(
+        productsPage,
+        10,
+        productsSearch,
+        filterParam
       );
-      const historyPromise = getClinicRequestHistory(
-        historyPage,
-        PAGE_SIZE,
-        historySearch,
-        historyFilterParam
-      );
-
-      if (user?.role === "pharmacy") {
-        const inventoryPromise = getInventory(
-          productsPage,
-          10,
-          productsSearch,
-          productsFilterParam
-        );
-
-        const [requestsResult, historyResult, productsResult] =
-          (await Promise.all([
-            requestsPromise,
-            historyPromise,
-            inventoryPromise,
-          ])) as [
-            Paginated<DrugRequest>,
-            Paginated<DrugRequest>,
-            Paginated<Product>
-          ];
-
-        setRequestsData(requestsResult);
-        setHistoryData(historyResult);
-        setProductsData(productsResult);
-      } else {
-        const [requestsResult, historyResult] = (await Promise.all([
-          requestsPromise,
-          historyPromise,
-        ])) as [Paginated<DrugRequest>, Paginated<DrugRequest>];
-
-        setRequestsData(requestsResult);
-        setHistoryData(historyResult);
-        setProductsData({
-          data: [],
-          pagination: { current: 1, pages: 0, total: 0 },
-        });
-      }
+      setProductsData(result);
     } catch (error) {
-      // Handle auth errors (e.g., expired token) by logging out and toasting
-      if (error instanceof Error && error.message.includes("Not authorized")) {
-        toast({
-          title: "Session Expired",
-          description: "Please log in again to continue.",
-          variant: "destructive",
-        });
-        // Assuming useAuth has a logout method; if not, call api.logout() and update context
-        // useAuth.logout(); // Uncomment if available
-        return;
-      }
-      // For non-auth errors (e.g., network), show toast
-      toast({
-        title: "Error loading data",
-        description: "Could not fetch requests or inventory.",
-        variant: "destructive",
-      });
-      console.error("Error loading data:", error);
+      handleError(error);
     }
   };
+
+  useEffect(() => {
+    loadRequests();
+  }, [user, requestsPage, requestsSearch, requestsFilter]);
+
+  useEffect(() => {
+    if (isHistoryOpen && user) {
+      loadHistory();
+    }
+  }, [user, isHistoryOpen, historyPage, historySearch, historyFilter]);
+
+  useEffect(() => {
+    if (
+      isNewRequestOpen &&
+      requestType === "inventory" &&
+      user?.role === "pharmacy"
+    ) {
+      loadInventory();
+    }
+  }, [
+    user,
+    isNewRequestOpen,
+    requestType,
+    productsPage,
+    productsSearch,
+    productsFilter,
+  ]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -1188,7 +1277,7 @@ export default function ClinicDashboard() {
       setIsNewRequestOpen(false);
       resetForm();
       setRequestsPage(1); // Reset to first page
-      loadData();
+      loadRequests();
     } catch (error) {
       toast({
         title: "Error",
@@ -1226,7 +1315,7 @@ export default function ClinicDashboard() {
       setIsNewRequestOpen(false);
       resetForm();
       setRequestsPage(1); // Reset to first page
-      loadData();
+      loadRequests();
     } catch (error) {
       toast({
         title: "Error",
@@ -1269,16 +1358,6 @@ export default function ClinicDashboard() {
 
   const handleHistoryPageChange = (newPage: number) => {
     setHistoryPage(newPage);
-  };
-
-  const handleRequestsSearch = (value: string) => {
-    setRequestsSearch(value);
-    setRequestsPage(1);
-  };
-
-  const handleHistorySearch = (value: string) => {
-    setHistorySearch(value);
-    setHistoryPage(1);
   };
 
   const handleProductsPageChange = (newPage: number) => {
@@ -1335,27 +1414,29 @@ export default function ClinicDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             Healthcare Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             Manage your drug requests and deliveries
           </p>
         </div>
 
         <Dialog open={isNewRequestOpen} onOpenChange={setIsNewRequestOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-primary hover:opacity-90">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="bg-gradient-primary hover:opacity-90 text-sm md:text-base">
+              <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               New Request
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Drug Request</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg md:text-xl">
+                Create New Drug Request
+              </DialogTitle>
+              <DialogDescription className="text-sm md:text-base">
                 Submit a request by uploading a photo or selecting from
                 available inventory.
               </DialogDescription>
@@ -1368,23 +1449,26 @@ export default function ClinicDashboard() {
               }
             >
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="photo" className="flex items-center gap-2">
-                  <Camera className="h-4 w-4" />
-                  Photo Request
+                <TabsTrigger
+                  value="photo"
+                  className="flex items-center gap-1 md:gap-2 text-xs md:text-sm"
+                >
+                  <Camera className="h-3 w-3 md:h-4 md:w-4" />
+                  Photo
                 </TabsTrigger>
                 <TabsTrigger
                   value="inventory"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 md:gap-2 text-xs md:text-sm"
                   disabled={!isPharmacy} // Disable for non-pharmacies
                 >
-                  <Package className="h-4 w-4" />
-                  From Inventory
+                  <Package className="h-3 w-3 md:h-4 md:w-4" />
+                  Inventory
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="photo" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="photo">
+                  <Label htmlFor="photo" className="text-sm md:text-base">
                     Upload Drug Photos (Multiple Allowed)
                   </Label>
                   <Input
@@ -1393,10 +1477,10 @@ export default function ClinicDashboard() {
                     accept="image/*"
                     multiple
                     onChange={handlePhotoUpload}
-                    className="cursor-pointer"
+                    className="cursor-pointer text-sm"
                   />
                   {photoFiles.length > 0 && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Selected {photoFiles.length} file(s):{" "}
                       {photoFiles.map((f) => f.name).join(", ")}
                     </p>
@@ -1408,7 +1492,7 @@ export default function ClinicDashboard() {
                 {isPharmacy ? (
                   <div className="space-y-3 max-h-60 overflow-y-auto">
                     {products.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">
+                      <p className="text-xs md:text-sm text-muted-foreground text-center py-4">
                         No inventory available at this time.
                       </p>
                     ) : (
@@ -1419,21 +1503,24 @@ export default function ClinicDashboard() {
                         return (
                           <div
                             key={product._id}
-                            className="flex items-center justify-between p-3 border rounded-lg"
+                            className="flex flex-col md:flex-row items-start md:items-center justify-between p-2 md:p-3 border rounded-lg gap-2 md:gap-0"
                           >
-                            <div>
-                              <p className="font-medium">{product.name}</p>
-                              <p className="text-sm text-muted-foreground">
+                            <div className="text-left">
+                              <p className="font-medium text-sm md:text-base">
+                                {product.name}
+                              </p>
+                              <p className="text-xs md:text-sm text-muted-foreground">
                                 {product.description}
                               </p>
-                              <p className="text-sm font-medium text-primary">
+                              <p className="text-xs md:text-sm font-medium text-primary">
                                 ${product.price}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 md:gap-2 self-end md:self-auto">
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="text-xs md:text-sm h-8 w-8 md:h-auto md:w-auto px-2 md:px-3"
                                 onClick={() =>
                                   updateProductQuantity(
                                     product._id,
@@ -1444,12 +1531,13 @@ export default function ClinicDashboard() {
                               >
                                 -
                               </Button>
-                              <span className="w-8 text-center">
+                              <span className="w-6 md:w-8 text-center text-sm md:text-base">
                                 {selected?.quantity || 0}
                               </span>
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="text-xs md:text-sm h-8 w-8 md:h-auto md:w-auto px-2 md:px-3"
                                 onClick={() =>
                                   updateProductQuantity(
                                     product._id,
@@ -1469,10 +1557,14 @@ export default function ClinicDashboard() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Inventory selection is available for pharmacies only.</p>
-                    <p className="text-sm">Use photo requests for clinics.</p>
+                  <div className="text-center py-4 md:py-8 text-muted-foreground">
+                    <Package className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-50" />
+                    <p className="text-sm md:text-base">
+                      Inventory selection is available for pharmacies only.
+                    </p>
+                    <p className="text-xs md:text-sm">
+                      Use photo requests for clinics.
+                    </p>
                   </div>
                 )}
               </TabsContent>
@@ -1480,22 +1572,28 @@ export default function ClinicDashboard() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="address">Delivery Address</Label>
+                <Label htmlFor="address" className="text-sm md:text-base">
+                  Delivery Address
+                </Label>
                 <Input
                   id="address"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                   placeholder="Enter full delivery address"
+                  className="text-sm md:text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="patient">Patient Information (Optional)</Label>
+                <Label htmlFor="patient" className="text-sm md:text-base">
+                  Patient Information (Optional)
+                </Label>
                 <Textarea
                   id="patient"
                   value={patientInfo}
                   onChange={(e) => setPatientInfo(e.target.value)}
                   placeholder="Patient details, special instructions, etc."
+                  className="text-sm md:text-base"
                 />
               </div>
 
@@ -1508,7 +1606,7 @@ export default function ClinicDashboard() {
                 disabled={
                   loading || (!isPharmacy && requestType === "inventory")
                 }
-                className="w-full"
+                className="w-full text-sm md:text-base"
               >
                 {loading ? "Submitting..." : "Submit Request"}
               </Button>
@@ -1519,31 +1617,31 @@ export default function ClinicDashboard() {
 
       {/* My Requests */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 pb-4 md:pb-6">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+              <Package className="h-4 w-4 md:h-5 md:w-5" />
               My Requests
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm md:text-base">
               Track all your drug requests including pending ones
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:flex-none">
+              <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               <Input
-                placeholder="Search requests..."
-                className="pl-10 w-48"
-                value={requestsSearch}
-                onChange={(e) => handleRequestsSearch(e.target.value)}
+                placeholder="Search..."
+                className="pl-7 md:pl-10 w-full md:w-36 lg:w-48 text-xs md:text-sm h-8 md:h-auto"
+                value={requestsSearchInput}
+                onChange={(e) => setRequestsSearchInput(e.target.value)}
               />
             </div>
             <Select value={requestsFilter} onValueChange={setRequestsFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full md:w-36 lg:w-[180px] text-xs md:text-sm h-8 md:h-auto">
                 <SelectValue placeholder="Filter status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="text-xs md:text-sm">
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="confirmed">Confirmed</SelectItem>
@@ -1552,37 +1650,43 @@ export default function ClinicDashboard() {
             </Select>
             <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Clock className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs md:text-sm h-8 md:h-auto"
+                >
+                  <Clock className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   History ({historyData.pagination.total})
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Request History</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-lg md:text-xl">
+                    Request History
+                  </DialogTitle>
+                  <DialogDescription className="text-sm md:text-base">
                     View your past and completed requests (excluding pending)
                   </DialogDescription>
                 </DialogHeader>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-4 gap-2 md:gap-0">
+                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-none">
+                      <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search history..."
-                        className="pl-10 w-48"
-                        value={historySearch}
-                        onChange={(e) => handleHistorySearch(e.target.value)}
+                        placeholder="Search..."
+                        className="pl-7 md:pl-10 w-full md:w-36 lg:w-48 text-xs md:text-sm h-8 md:h-auto"
+                        value={historySearchInput}
+                        onChange={(e) => setHistorySearchInput(e.target.value)}
                       />
                     </div>
                     <Select
                       value={historyFilter}
                       onValueChange={setHistoryFilter}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-full md:w-36 lg:w-[180px] text-xs md:text-sm h-8 md:h-auto">
                         <SelectValue placeholder="Filter" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="text-xs md:text-sm">
                         <SelectItem value="all">All</SelectItem>
                         <SelectItem value="photo">Photo Requests</SelectItem>
                         <SelectItem value="inventory">
@@ -1596,9 +1700,9 @@ export default function ClinicDashboard() {
                 </div>
                 <div className="space-y-4">
                   {history.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">
+                    <div className="text-center py-4 md:py-8">
+                      <Clock className="h-8 w-8 md:h-12 md:w-12 text-muted-foreground mx-auto mb-2 md:mb-4" />
+                      <p className="text-sm md:text-base text-muted-foreground">
                         No completed requests yet.
                       </p>
                     </div>
@@ -1607,27 +1711,32 @@ export default function ClinicDashboard() {
                       {history.map((request) => (
                         <div
                           key={request._id}
-                          className="border rounded-lg p-4 space-y-3"
+                          className="border rounded-lg p-3 md:p-4 space-y-2 md:space-y-3"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
+                            <div className="flex items-center gap-2 md:gap-3">
                               <Badge
                                 variant="outline"
-                                className={getStatusColor(request.status)}
+                                className={`${getStatusColor(
+                                  request.status
+                                )} text-xs md:text-sm`}
                               >
                                 {getStatusIcon(request.status)}
                                 {request.status
                                   .replace(/_/g, " ")
                                   .toUpperCase()}
                               </Badge>
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-xs md:text-sm text-muted-foreground">
                                 Updated:{" "}
                                 {new Date(
                                   request.updatedAt
                                 ).toLocaleDateString()}
                               </span>
                             </div>
-                            <Badge variant="secondary">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs md:text-sm"
+                            >
                               {request.type === "photo"
                                 ? "Photo Request"
                                 : "Inventory Request"}
@@ -1638,10 +1747,10 @@ export default function ClinicDashboard() {
                             request.photoUrls &&
                             request.photoUrls.length > 0 && (
                               <div className="space-y-2">
-                                <p className="text-sm font-medium">
+                                <p className="text-xs md:text-sm font-medium">
                                   Uploaded Photos:
                                 </p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                <div className="grid grid-cols-2 gap-2">
                                   {request.photoUrls.map((photoUrl, index) => (
                                     <div key={index} className="relative group">
                                       <img
@@ -1649,7 +1758,9 @@ export default function ClinicDashboard() {
                                         alt={`Submitted drug photo ${
                                           index + 1
                                         }`}
-                                        className="max-w-full h-32 object-cover rounded-lg shadow-md"
+                                        className="w-full h-24 md:h-32 object-cover rounded-lg shadow-md"
+                                        loading="lazy"
+                                        decoding="async"
                                       />
                                     </div>
                                   ))}
@@ -1660,15 +1771,15 @@ export default function ClinicDashboard() {
                           {request.type === "inventory" &&
                             request.selectedProducts && (
                               <div className="space-y-2">
-                                <p className="text-sm font-medium">
+                                <p className="text-xs md:text-sm font-medium">
                                   Requested Items:
                                 </p>
-                                <div className="grid gap-2">
+                                <div className="grid gap-1 md:gap-2">
                                   {request.selectedProducts.map(
                                     (item, index) => (
                                       <div
                                         key={index}
-                                        className="text-sm text-muted-foreground"
+                                        className="text-xs md:text-sm text-muted-foreground"
                                       >
                                         • {item.productName} (Qty:{" "}
                                         {item.quantity})
@@ -1679,29 +1790,29 @@ export default function ClinicDashboard() {
                               </div>
                             )}
 
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <MapPin className="h-4 w-4" />
+                          <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                             {request.deliveryAddress}
                           </div>
 
                           {request.status === "rejected" &&
                             request.rejectionReason && (
-                              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                                <p className="text-sm font-medium text-destructive">
+                              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 md:p-3">
+                                <p className="text-xs md:text-sm font-medium text-destructive">
                                   Rejection Reason:
                                 </p>
-                                <p className="text-sm text-destructive/80">
+                                <p className="text-xs md:text-sm text-destructive/80">
                                   {request.rejectionReason}
                                 </p>
                               </div>
                             )}
 
                           {request.status === "confirmed" && request.order && (
-                            <div className="bg-success/10 border border-success/20 rounded-lg p-3">
-                              <p className="text-sm font-medium text-success">
+                            <div className="bg-success/10 border border-success/20 rounded-lg p-2 md:p-3">
+                              <p className="text-xs md:text-sm font-medium text-success">
                                 Order Details:
                               </p>
-                              <div className="text-sm text-success/80 space-y-1">
+                              <div className="text-xs md:text-sm text-success/80 space-y-1">
                                 <div>Order ID: {request.order._id}</div>
                                 <div>Total: ${request.order.totalAmount}</div>
                                 <div>
@@ -1722,8 +1833,8 @@ export default function ClinicDashboard() {
                       ))}
                       {/* Pagination for History */}
                       {historyData.pagination.pages > 1 && (
-                        <div className="flex items-center justify-between pt-4">
-                          <div className="text-sm text-muted-foreground">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between pt-4 gap-2 md:gap-0">
+                          <div className="text-xs md:text-sm text-muted-foreground">
                             Showing {(historyPage - 1) * PAGE_SIZE + 1} to{" "}
                             {Math.min(
                               historyPage * PAGE_SIZE,
@@ -1735,17 +1846,19 @@ export default function ClinicDashboard() {
                             <Button
                               variant="outline"
                               size="sm"
+                              className="text-xs md:text-sm h-8 md:h-auto"
                               onClick={() =>
                                 handleHistoryPageChange(historyPage - 1)
                               }
                               disabled={historyPage === 1}
                             >
-                              <ChevronLeft className="h-4 w-4" />
-                              Previous
+                              <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
+                              Prev
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
+                              className="text-xs md:text-sm h-8 md:h-auto"
                               onClick={() =>
                                 handleHistoryPageChange(historyPage + 1)
                               }
@@ -1754,7 +1867,7 @@ export default function ClinicDashboard() {
                               }
                             >
                               Next
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
                             </Button>
                           </div>
                         </div>
@@ -1768,9 +1881,9 @@ export default function ClinicDashboard() {
         </CardHeader>
         <CardContent>
           {requests.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
+            <div className="text-center py-4 md:py-8">
+              <Package className="h-8 w-8 md:h-12 md:w-12 text-muted-foreground mx-auto mb-2 md:mb-4" />
+              <p className="text-sm md:text-base text-muted-foreground">
                 No requests yet. Create your first request above!
               </p>
             </div>
@@ -1779,22 +1892,24 @@ export default function ClinicDashboard() {
               {requests.map((request) => (
                 <div
                   key={request._id}
-                  className="border rounded-lg p-4 space-y-3"
+                  className="border rounded-lg p-3 md:p-4 space-y-2 md:space-y-3"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
+                    <div className="flex items-center gap-2 md:gap-3">
                       <Badge
                         variant="outline"
-                        className={getStatusColor(request.status)}
+                        className={`${getStatusColor(
+                          request.status
+                        )} text-xs md:text-sm`}
                       >
                         {getStatusIcon(request.status)}
                         {request.status.replace(/_/g, " ").toUpperCase()}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-xs md:text-sm text-muted-foreground">
                         {new Date(request.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="text-xs md:text-sm">
                       {request.type === "photo"
                         ? "Photo Request"
                         : "Inventory Request"}
@@ -1805,14 +1920,18 @@ export default function ClinicDashboard() {
                     request.photoUrls &&
                     request.photoUrls.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Uploaded Photos:</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <p className="text-xs md:text-sm font-medium">
+                          Uploaded Photos:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
                           {request.photoUrls.map((photoUrl, index) => (
                             <div key={index} className="relative group">
                               <img
                                 src={photoUrl}
                                 alt={`Submitted drug photo ${index + 1}`}
-                                className="max-w-full h-32 object-cover rounded-lg shadow-md"
+                                className="w-full h-24 md:h-32 object-cover rounded-lg shadow-md"
+                                loading="lazy"
+                                decoding="async"
                               />
                             </div>
                           ))}
@@ -1822,12 +1941,14 @@ export default function ClinicDashboard() {
 
                   {request.type === "inventory" && request.selectedProducts && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Requested Items:</p>
-                      <div className="grid gap-2">
+                      <p className="text-xs md:text-sm font-medium">
+                        Requested Items:
+                      </p>
+                      <div className="grid gap-1 md:gap-2">
                         {request.selectedProducts.map((item, index) => (
                           <div
                             key={index}
-                            className="text-sm text-muted-foreground"
+                            className="text-xs md:text-sm text-muted-foreground"
                           >
                             • {item.productName} (Qty: {item.quantity})
                           </div>
@@ -1836,17 +1957,17 @@ export default function ClinicDashboard() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
+                  <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground">
+                    <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                     {request.deliveryAddress}
                   </div>
 
                   {request.status === "rejected" && request.rejectionReason && (
-                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                      <p className="text-sm font-medium text-destructive">
+                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 md:p-3">
+                      <p className="text-xs md:text-sm font-medium text-destructive">
                         Rejection Reason:
                       </p>
-                      <p className="text-sm text-destructive/80">
+                      <p className="text-xs md:text-sm text-destructive/80">
                         {request.rejectionReason}
                       </p>
                     </div>
@@ -1855,8 +1976,8 @@ export default function ClinicDashboard() {
               ))}
               {/* Pagination for Requests */}
               {requestsData.pagination.pages > 1 && (
-                <div className="flex items-center justify-between pt-4">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between pt-4 gap-2 md:gap-0">
+                  <div className="text-xs md:text-sm text-muted-foreground">
                     Showing {(requestsPage - 1) * PAGE_SIZE + 1} to{" "}
                     {Math.min(
                       requestsPage * PAGE_SIZE,
@@ -1868,20 +1989,22 @@ export default function ClinicDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="text-xs md:text-sm h-8 md:h-auto"
                       onClick={() => handleRequestsPageChange(requestsPage - 1)}
                       disabled={requestsPage === 1}
                     >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
+                      Prev
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      className="text-xs md:text-sm h-8 md:h-auto"
                       onClick={() => handleRequestsPageChange(requestsPage + 1)}
                       disabled={requestsPage === requestsData.pagination.pages}
                     >
                       Next
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                   </div>
                 </div>
