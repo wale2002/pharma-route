@@ -1,22 +1,24 @@
-# Welcome to your Lovable project
+# Welcome to your MediLink project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/57e7d861-f822-4aa9-9789-569aa323420e
+MediLink is a web-based platform designed to streamline drug request and delivery management in healthcare settings. Developed by Oluwaferanmi Adewusi, it connects clinics (healthcare providers), pharmacies, and delivery riders to facilitate efficient handling of medication requests. Key features include:
+
+- **Request Submission**: Clinics can create new drug requests by uploading photos of prescriptions or selecting items directly from pharmacy inventory.
+- **Status Tracking**: Real-time monitoring of request statuses (e.g., pending, confirmed, in transit, delivered) with visual indicators and notifications.
+- **Role-Based Dashboards**: Tailored interfaces for clinics (request management), pharmacies (inventory and order fulfillment), and riders (delivery assignments).
+- **History and Analytics**: Access to past requests, rejection reasons, order details, and search/filter options for better oversight.
+- **Secure Collaboration**: Ensures seamless communication and data flow while maintaining user authentication and role-specific access.
+
+This platform enhances operational efficiency, reduces errors in drug dispensing, and improves patient care by enabling quick, trackable deliveries.
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/57e7d861-f822-4aa9-9789-569aa323420e) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +64,16 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/57e7d861-f822-4aa9-9789-569aa323420e) and click on Share -> Publish.
+To deploy MediLink, you can use popular hosting platforms like Vercel, Netlify, or GitHub Pages. For example:
 
-## Can I connect a custom domain to my Lovable project?
+- **Vercel**: Connect your GitHub repo to Vercel, and it will automatically build and deploy on every push.
+- **Netlify**: Drag and drop the built files or connect via Git for continuous deployment.
+- Follow the platform's quick-start guide for a live URL in minutes.
+
+## Can I connect a custom domain to my project?
 
 Yes, you can!
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Most deployment platforms (e.g., Vercel, Netlify) support custom domains natively. Configure your DNS settings to point to the hosted site, and update the platform's domain settings accordingly.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Read more here: [Vercel Custom Domains](https://vercel.com/docs/concepts/projects/custom-domains) or [Netlify Custom Domains](https://docs.netlify.com/domains-https/custom-domains/).
