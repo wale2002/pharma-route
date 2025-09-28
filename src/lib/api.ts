@@ -386,8 +386,8 @@
 import axios from "axios";
 import { AxiosRequestConfig } from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api"; // Changed back to local for development
-// https://mediprocure-backend.onrender.com/
+const API_BASE_URL = "https://mediprocure-backend.onrender.com/api"; // Changed back to local for development
+//
 // http://localhost:5000/api
 const api = axios.create({
   baseURL: API_BASE_URL,
